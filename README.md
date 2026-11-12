@@ -2,7 +2,9 @@
 
 A minimal tab bar for Kitty on macOS. Tab numbers come first and are slightly dimmer than their titles. The Catppuccin Mocha mauve highlight slides behind stationary labels in 180 ms, with inset rounded corners and no shadow.
 
-![Kitty tab bar with three example tabs named Editor, Shell, and Logs. The Shell tab has a rounded mauve highlight.](preview.png)
+![The rounded mauve highlight slides between the Editor, Shell, and Logs tabs in Kitty.](demo.gif)
+
+[Static preview](preview.png)
 
 ## Install
 
