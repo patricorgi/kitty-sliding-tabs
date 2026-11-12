@@ -23,3 +23,17 @@ Catppuccin Mocha is the default. To use another theme, edit the two files below.
 
 1. In `sliding-tabs.conf`, set `tab_bar_background` and `inactive_tab_background` to your theme’s terminal `background`. Set the highlight with `active_tab_background`, the title colors with the two `*_tab_foreground` settings, and the index colors with `fmt.fg._RRGGBB` in the two title templates.
 2. In `shaders/active-tab-slide-lite.slang`, match the five palette constants to those same colors using decimal RGB values from 0 to 255. For example, `#CBA6F7` becomes `float3(203, 166, 247)`. Restart Kitty to load the edited shader.
+
+## Theme previews
+
+### [Nord](https://www.nordtheme.com/docs/colors-and-palettes/)
+
+![Kitty tab switching with the Nord palette.](demos/nord.gif)
+
+### [Tokyo Night](https://github.com/folke/tokyonight.nvim)
+
+![Kitty tab switching with the Tokyo Night palette.](demos/tokyo-night.gif)
+
+### [Gruvbox Dark](https://github.com/morhetz/gruvbox)
+
+![Kitty tab switching with the Gruvbox Dark palette.](demos/gruvbox-dark.gif)
