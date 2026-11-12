@@ -13,9 +13,6 @@ from kitty.fast_data_types import (
 )
 from kitty.tab_bar import TabBar, as_rgb, draw_tab_with_separator
 
-LEFT_CORNER = '\ue100'
-RIGHT_CORNER = '\ue101'
-
 
 def draw_tab(draw_data, screen, tab, before, max_tab_length, index, is_last, extra_data):
     if not tab.is_active or max_tab_length < 4:
@@ -26,22 +23,8 @@ def draw_tab(draw_data, screen, tab, before, max_tab_length, index, is_last, ext
     padded = draw_data._replace(
         active_title_template=template.strip(),
         leading_spaces=1, trailing_spaces=1)
-    start = screen.cursor.x
-    end = draw_tab_with_separator(
+    return draw_tab_with_separator(
         padded, screen, tab, before, max_tab_length, index, is_last, extra_data)
-    if end - start < 3 or extra_data.for_layout:
-        return end
-
-    cursor = screen.cursor
-    x, fg, bg = cursor.x, cursor.fg, cursor.bg
-    cursor.fg = as_rgb(draw_data.tab_bg(tab))
-    cursor.bg = as_rgb(int(draw_data.default_bg))
-    cursor.x = start
-    screen.draw(LEFT_CORNER)
-    cursor.x = end - 1
-    screen.draw(RIGHT_CORNER)
-    cursor.x, cursor.fg, cursor.bg = x, fg, bg
-    return end
 
 
 # Kitty normally splits the unused fraction of a character cell between both

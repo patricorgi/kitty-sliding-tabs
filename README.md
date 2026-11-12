@@ -28,8 +28,7 @@ Yeah, purely AI generated, so you know the drill.
 
 Tested on a Retina Mac with Kitty 0.50.0 and JetBrains Mono.
 
-1. Clone this repo. Install the [corner font](fonts/KittyInsetCorners-Regular.ttf) in Font Book on macOS or copy it to `~/.local/share/fonts/` on Linux.
-2. Copy the files from the repo folder.
+1. Clone this repo. Copy the files from the repo folder.
 
    ```sh
    kitty_dir="${KITTY_CONFIG_DIRECTORY:-${XDG_CONFIG_HOME:-$HOME/.config}/kitty}"
@@ -38,8 +37,8 @@ Tested on a Retina Mac with Kitty 0.50.0 and JetBrains Mono.
    cp -i shaders/active-tab-slide-lite.* "$kitty_dir/shaders/"
    ```
 
-3. Add `include sliding-tabs.conf` after your theme in `kitty.conf`.
-4. Restart Kitty. Switch tabs.
+2. Add `include sliding-tabs.conf` after your theme in `kitty.conf`.
+3. Restart Kitty. Switch tabs.
 
 ## How to change colors
 
@@ -53,12 +52,16 @@ Edit these settings in `sliding-tabs.conf` and match them in `shaders/active-tab
 
 Use hex in the config and decimal RGB in the shader. For example, `#CBA6F7` becomes `float3(203, 166, 247)`. Set `tab_bar_background` and `inactive_tab_background` to your terminal’s `background`. Restart Kitty.
 
+## How to change the corner radius
+
+Edit `CORNER_RADIUS` in `shaders/active-tab-slide-lite.slang`. The default is `24.8` px at a 53 px tab height and scales with the bar. Use `0.0` for square corners. Restart Kitty.
+
 ## How it works
 
-Kitty’s custom tab bar API draws the labels and rounded corner glyphs. Python tracks the highlight’s position. The shader moves it pixel by pixel behind the fixed labels in 180 ms. Kitty’s text-cell drawing API alone can move the highlight only in whole-cell steps. [Kitty tab bar documentation](https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.tab_bar_style)
+Kitty’s custom tab bar API draws the labels. Python tracks the highlight’s position. The shader draws the rounded shape and slides it behind the fixed labels in 180 ms. Kitty’s text-cell drawing API alone can move the highlight only in whole-cell steps. [Kitty tab bar documentation](https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.tab_bar_style)
 
 ## Caveat
 
 The shader needs Kitty to keep a shared offscreen texture containing the full window. That’s about 63 MiB at 3840 × 2160 with 16 bits per RGBA channel. The animation itself keeps only the transition coordinates and start time in Python. [Kitty shader renderer](https://github.com/kovidgoyal/kitty/blob/v0.50.0/kitty/shaders.c)
 
-Linux is untested. The slide requires a 12 px top and left inset and compatible font cell metrics. Crowded rows or a different layout switch instantly. For static tabs, remove `custom_shaders active-tab-slide-lite` from `sliding-tabs.conf`.
+Linux is untested. The slide requires a 12 px top and left inset and compatible font cell metrics. Crowded rows or a different layout switch instantly. Removing `custom_shaders active-tab-slide-lite` from `sliding-tabs.conf` gives square tabs with instant switching.
