@@ -23,9 +23,8 @@ def draw_tab(draw_data, screen, tab, before, max_tab_length, index, is_last, ext
             draw_data, screen, tab, before, max_tab_length, index, is_last, extra_data)
 
     template = draw_data.active_title_template or draw_data.title_template
-    number = '{fmt.fg._585b70}{index}{fmt.fg.tab}'  # Mocha Surface 2
     padded = draw_data._replace(
-        active_title_template=template.strip().replace('{index}', number, 1),
+        active_title_template=template.strip(),
         leading_spaces=1, trailing_spaces=1)
     start = screen.cursor.x
     end = draw_tab_with_separator(

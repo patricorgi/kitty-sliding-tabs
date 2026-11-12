@@ -1,35 +1,25 @@
 # Kitty Sliding Tabs
 
-A minimal tab bar for Kitty on macOS. Tab numbers come first and are slightly dimmer than their titles. The Catppuccin Mocha mauve highlight slides behind stationary labels in 180 ms, with inset rounded corners and no shadow.
+A minimal Kitty tab bar for macOS with numbered tabs and a rounded highlight that slides in 180 ms.
 
-![The rounded mauve highlight slides between the Editor, Shell, and Logs tabs in Kitty.](demo.gif)
-
-[Static preview](preview.png)
+![The rounded highlight slides between three Kitty tabs.](demo.gif)
 
 ## Install
 
-Tested with Kitty 0.50.0 on a Retina Mac, using JetBrains Mono at 20, 28, and 36 pt. The slide uses the Catppuccin Mocha palette and expects a terminal background of `#1e1e2e`.
+Tested with Kitty 0.50.0 on a Retina Mac with JetBrains Mono (20, 28, and 36 pt). Install [the corner font](fonts/KittyInsetCorners-Regular.ttf) in Font Book, then copy the files from this repo.
 
-1. Clone the repo and open `fonts/KittyInsetCorners-Regular.ttf` in Font Book. Install the font. It contains the two corner glyphs.
-2. From the cloned directory, copy the tab renderer, configuration snippet, and shader files. If you already have a custom `tab_bar.py`, back it up before replacing it. The commands prompt before overwriting existing files.
+```sh
+kitty_dir="${KITTY_CONFIG_DIRECTORY:-${XDG_CONFIG_HOME:-$HOME/.config}/kitty}"
+mkdir -p "$kitty_dir/shaders"
+cp -i tab_bar.py sliding-tabs.conf "$kitty_dir/"
+cp -i shaders/active-tab-slide-lite.* "$kitty_dir/shaders/"
+```
 
-   ```sh
-   kitty_dir="${KITTY_CONFIG_DIRECTORY:-${XDG_CONFIG_HOME:-$HOME/.config}/kitty}"
-   mkdir -p "$kitty_dir/shaders"
-   cp -i tab_bar.py sliding-tabs.conf "$kitty_dir/"
-   cp -i shaders/active-tab-slide-lite.* "$kitty_dir/shaders/"
-   ```
+Add `include sliding-tabs.conf` after your theme in `kitty.conf`, then restart Kitty. The snippet selects its own shader pipeline. Crowded tab rows or unsupported font and display geometry use an instant highlight.
 
-3. Add this line to `kitty.conf` after your color theme. If you already set `custom_shaders`, review that setting before adding the snippet, since the snippet selects its own shader pipeline.
+## Colors
 
-   ```conf
-   include sliding-tabs.conf
-   ```
+Catppuccin Mocha is the default. To use another theme, edit the two files below.
 
-4. Restart Kitty so it loads the font and renderer. Open another tab with **⌘T** and switch tabs to see the animation.
-
-## How it works
-
-`tab_bar.py` draws the rounded tab and tracks the highlight position. The shader draws the moving highlight in one pass and needs no extra full-window textures to store animation state. If the tab row is crowded or the font and display geometry differ from the supported layout, the highlight switches instantly.
-
-To change the duration, edit `SLIDE_SECONDS` in `tab_bar.py`.
+1. In `sliding-tabs.conf`, set `tab_bar_background` and `inactive_tab_background` to your theme’s terminal `background`. Set the highlight with `active_tab_background`, the title colors with the two `*_tab_foreground` settings, and the index colors with `fmt.fg._RRGGBB` in the two title templates.
+2. In `shaders/active-tab-slide-lite.slang`, match the five palette constants to those same colors using decimal RGB values from 0 to 255. For example, `#CBA6F7` becomes `float3(203, 166, 247)`. Restart Kitty to load the edited shader.

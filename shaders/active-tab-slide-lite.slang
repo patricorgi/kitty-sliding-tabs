@@ -3,11 +3,22 @@
 import kitty_custom_shader_types;
 
 static const float MARGIN_PX = 12.0;
-static const float3 MAUVE = float3(0.597202, 0.381326, 0.930111);
 static const int MARKER_OFFSETS[4] = { 0, 32, 48, 64 };
 
+// Match these sRGB values (0–255) to sliding-tabs.conf.
+static const float3 ACTIVE_BACKGROUND = float3(203, 166, 247);
+static const float3 ACTIVE_TITLE = float3(30, 30, 46);
+static const float3 ACTIVE_INDEX = float3(88, 91, 112);
+static const float3 INACTIVE_TITLE = float3(205, 214, 244);
+static const float3 INACTIVE_INDEX = float3(147, 153, 178);
+
+float linear_channel(float srgb) {
+    float value = srgb / 255.0;
+    return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4);
+}
+
 float3 linear_rgb(float3 srgb) {
-    return pow((srgb / 255.0 + 0.055) / 1.055, float3(2.4));
+    return float3(linear_channel(srgb.r), linear_channel(srgb.g), linear_channel(srgb.b));
 }
 
 int read_marker(KittyTexture texture, float2 pixel, float x, float y, int signature) {
@@ -28,12 +39,12 @@ float coverage_of(float3 color, float3 background, float3 ink) {
 // The left glyph's advance can be fractional while Kitty's cell width is
 // rounded up. Extend its last fully rendered part into the join with the body.
 float left_cap_fill(KittyTexture texture, float2 pixel, float y, float left, float offset,
-                    float cell_width, float3 background) {
+                    float cell_width, float3 background, float3 highlight) {
     float3 cap = texture.Sample(float2((left + offset) * pixel.x, y)).rgb;
-    float fill = coverage_of(cap, background, MAUVE);
+    float fill = coverage_of(cap, background, highlight);
     if (offset < cell_width - 2.0) return fill;
     float3 inner_cap = texture.Sample(float2((left + cell_width - 2.5) * pixel.x, y)).rgb;
-    return max(fill, coverage_of(inner_cap, background, MAUVE));
+    return max(fill, coverage_of(inner_cap, background, highlight));
 }
 
 float4 paint_slide(float4 color, KittyTextures t, KittyCustomShaderData d,
@@ -45,31 +56,32 @@ float4 paint_slide(float4 color, KittyTextures t, KittyCustomShaderData d,
 
     // Carry the current cap pixels with the moving pill, including their antialiasing.
     float3 background = d.background.rgb;
+    float3 highlight = linear_rgb(ACTIVE_BACKGROUND);
     float fill = 0.0;
     if (under_slide) {
         float left_offset = x - visible.x;
         float right_offset = visible.y - x;
         if (left_offset < cell_width) {
             fill = left_cap_fill(t.backbuffer, pixel, t.pos.y, target.x, left_offset,
-                                 cell_width, background);
+                                 cell_width, background, highlight);
         } else if (right_offset <= cell_width) {
             float3 cap = t.backbuffer.Sample(float2((target.y - right_offset) * pixel.x, t.pos.y)).rgb;
-            fill = coverage_of(cap, background, MAUVE);
+            fill = coverage_of(cap, background, highlight);
         } else {
             fill = 1.0;
         }
     }
-    float3 new_background = lerp(background, MAUVE, fill);
+    float3 new_background = lerp(background, highlight, fill);
     if (under_target && (x < target.x + cell_width || x >= target.y - cell_width))
         return float4(new_background, color.a);
 
-    // Recover text coverage from the two Mocha ink colors and composite it
+    // Recover text coverage from the title and index colors and composite it
     // in place over the moving fill. The labels never translate.
-    float3 inactive_title = linear_rgb(float3(205, 214, 244));
-    float3 inactive_number = linear_rgb(float3(147, 153, 178));
-    float3 active_title = linear_rgb(float3(30, 30, 46));
-    float3 active_number = linear_rgb(float3(88, 91, 112));
-    float3 original_background = under_target ? MAUVE : background;
+    float3 inactive_title = linear_rgb(INACTIVE_TITLE);
+    float3 inactive_number = linear_rgb(INACTIVE_INDEX);
+    float3 active_title = linear_rgb(ACTIVE_TITLE);
+    float3 active_number = linear_rgb(ACTIVE_INDEX);
+    float3 original_background = under_target ? highlight : background;
     float3 old_title = under_target ? active_title : inactive_title;
     float3 old_number = under_target ? active_number : inactive_number;
     float title_alpha = coverage_of(color.rgb, original_background, old_title);
@@ -90,10 +102,11 @@ float4 repair_static_join(float4 color, KittyTextures t, KittyCustomShaderData d
     if (left < MARGIN_PX || offset < cell_width - 2.0 || cell_width < 4.0) return color;
     float3 inside = t.backbuffer.Sample(float2((left + cell_width * 0.5) * pixel.x, sample_y)).rgb;
     float3 before = t.backbuffer.Sample(float2((left - 0.5) * pixel.x, sample_y)).rgb;
-    if (distance(inside, MAUVE) >= 0.035 || distance(before, MAUVE) < 0.035) return color;
+    float3 highlight = linear_rgb(ACTIVE_BACKGROUND);
+    if (distance(inside, highlight) >= 0.035 || distance(before, highlight) < 0.035) return color;
     float3 background = d.background.rgb;
-    float fill = left_cap_fill(t.backbuffer, pixel, t.pos.y, left, offset, cell_width, background);
-    return float4(lerp(background, MAUVE, fill), color.a);
+    float fill = left_cap_fill(t.backbuffer, pixel, t.pos.y, left, offset, cell_width, background, highlight);
+    return float4(lerp(background, highlight, fill), color.a);
 }
 
 public float4 fragment_main(float4 color, KittyTextures t, uniform KittyCustomShaderData d) {
